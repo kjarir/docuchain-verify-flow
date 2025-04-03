@@ -46,18 +46,16 @@ app.post('/api/validate', (req, res) => {
       });
     }
 
-    // Mock validation response
-    const result = {
+    // Success response
+    return res.json({
       isValid: true,
       documentId,
       timestamp: new Date().toISOString(),
       message: 'Document validation successful'
-    };
-
-    res.status(200).json(result);
+    });
   } catch (error) {
-    console.error('Validation error:', error);
-    res.status(500).json({ 
+    console.error('Error:', error);
+    return res.status(500).json({ 
       error: 'Server Error',
       message: 'An unexpected error occurred'
     });
