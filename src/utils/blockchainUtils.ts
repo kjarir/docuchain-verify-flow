@@ -76,3 +76,26 @@ export const generateDocument = async (templateType: string, documentData: any):
     transactionHash: generateHash(),
   };
 };
+
+// API Service layer (would be connected to a real backend in production)
+export const getApiKey = (): string => {
+  // In a real implementation, this would connect to an actual server
+  // For the demo, we'll generate a random API key
+  return "dk_" + generateHash(32);
+};
+
+// For the demo, stores documents in localStorage
+export const getUserDocuments = (): any[] => {
+  const storedDocuments = localStorage.getItem('userDocuments');
+  return storedDocuments ? JSON.parse(storedDocuments) : [];
+};
+
+export const saveUserDocument = (document: any): void => {
+  const documents = getUserDocuments();
+  documents.push({
+    ...document,
+    id: generateHash(16),
+    createdAt: new Date().toISOString()
+  });
+  localStorage.setItem('userDocuments', JSON.stringify(documents));
+};

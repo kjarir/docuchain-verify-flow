@@ -10,6 +10,8 @@ import GeneratePage from "./pages/GeneratePage";
 import DashboardPage from "./pages/DashboardPage";
 import NotFound from "./pages/NotFound";
 import ApiDocsPage from "./pages/ApiDocsPage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +27,8 @@ const App = () => (
           <Route path="/generate" element={<GeneratePage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/api" element={<ApiDocsPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

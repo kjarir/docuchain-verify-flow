@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Save, CheckCircle, AlertCircle } from "lucide-react";
+import { FileText, Save, CheckCircle, AlertCircle, Download, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ValidationBlock from "@/components/ValidationBlock";
+import { generateDocument } from "@/utils/blockchainUtils";
 
 const GeneratePage = () => {
   const [template, setTemplate] = useState("");
@@ -33,27 +35,83 @@ const GeneratePage = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  const handleGenerateDocument = () => {
-    if (!template || !formData.title) return;
+  const handleGenerateDocument = async () => {
+    if (!template || !formData.title) {
+      toast.error("Please select a template and enter a title");
+      return;
+    }
     
     setGenerating(true);
     
-    // Simulate document generation process
-    setTimeout(() => {
-      const documentId = "0x" + Array.from({ length: 40 }, () => 
-        Math.floor(Math.random() * 16).toString(16)
-      ).join("");
+    try {
+      // Use the blockchain utility to generate a document
+      const result = await generateDocument(template, formData);
       
-      setGenerated(true);
+      if (result.success) {
+        setGenerated(true);
+        setDocumentResult({
+          status: "verified",
+          documentId: result.documentId,
+          timestamp: result.timestamp,
+          blockNumber: result.blockNumber,
+          transactionHash: result.transactionHash,
+        });
+        
+        toast.success("Document successfully generated and registered on blockchain");
+      } else {
+        toast.error("Failed to generate document");
+      }
+    } catch (error) {
+      console.error("Error generating document:", error);
+      toast.error("An error occurred while generating the document");
+    } finally {
       setGenerating(false);
-      setDocumentResult({
-        status: "verified",
-        documentId,
-        timestamp: new Date().toISOString(),
-        blockNumber: "15483012",
-        transactionHash: "0x8b7c7d5e902f9e2e68f799778b568c383ad5cef1bbc6e5678c9d9bc6eb0a3521",
-      });
-    }, 2500);
+    }
+  };
+
+  const handleDownloadDocument = () => {
+    if (!documentResult) return;
+    
+    // Create a blob with the document content
+    const documentContent = `
+      Document ID: ${documentResult.documentId}
+      Title: ${formData.title}
+      Description: ${formData.description}
+      Parties: ${formData.parties}
+      Date: ${new Date(documentResult.timestamp).toLocaleString()}
+      Transaction Hash: ${documentResult.transactionHash}
+      Block Number: ${documentResult.blockNumber}
+      
+      CONTENT:
+      ${formData.content}
+    `;
+    
+    const blob = new Blob([documentContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    
+    // Create a temporary link and trigger download
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${formData.title.replace(/\s+/g, '_')}_${documentResult.documentId.substring(0, 8)}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    
+    // Clean up
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast.success("Document downloaded successfully");
+  };
+
+  const handleViewOnBlockchain = () => {
+    if (!documentResult?.transactionHash) return;
+    
+    // In a real application, this would link to a real blockchain explorer
+    // For now, we'll use a mock URL
+    const blockchainUrl = `https://etherscan.io/tx/${documentResult.transactionHash}`;
+    window.open(blockchainUrl, '_blank');
+    
+    toast.success("Opening blockchain explorer");
   };
 
   return (
@@ -240,11 +298,11 @@ const GeneratePage = () => {
               <ValidationBlock {...documentResult} />
               
               <div className="mt-4 flex gap-3">
-                <Button variant="outline">
-                  Download Document
+                <Button variant="outline" onClick={handleDownloadDocument}>
+                  <Download size={16} className="mr-2" /> Download Document
                 </Button>
-                <Button variant="outline">
-                  View on Blockchain
+                <Button variant="outline" onClick={handleViewOnBlockchain}>
+                  <ExternalLink size={16} className="mr-2" /> View on Blockchain
                 </Button>
               </div>
             </div>

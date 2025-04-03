@@ -1,9 +1,28 @@
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { FileText, Shield, Key, LayoutDashboard } from "lucide-react";
+import { Shield, LogOut } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 const Navbar = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is logged in
+    const loginStatus = localStorage.getItem("isLoggedIn") === "true";
+    setIsLoggedIn(loginStatus);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("userEmail");
+    setIsLoggedIn(false);
+    toast.success("Logged out successfully");
+    navigate("/");
+  };
+
   return (
     <nav className="w-full py-4 px-6 bg-white border-b shadow-sm">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
@@ -24,18 +43,28 @@ const Navbar = () => {
           <Link to="/generate" className="text-sm font-medium hover:text-primary transition-colors">
             Generate
           </Link>
-          <Link to="/dashboard" className="text-sm font-medium hover:text-primary transition-colors">
-            Dashboard
-          </Link>
+          {isLoggedIn && (
+            <Link to="/dashboard" className="text-sm font-medium hover:text-primary transition-colors">
+              Dashboard
+            </Link>
+          )}
         </div>
         
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/login">Login</Link>
-          </Button>
-          <Button size="sm" className="bg-gradient-blockchain hover:opacity-90" asChild>
-            <Link to="/register">Register</Link>
-          </Button>
+          {isLoggedIn ? (
+            <Button variant="outline" size="sm" onClick={handleLogout}>
+              <LogOut size={16} className="mr-1" /> Logout
+            </Button>
+          ) : (
+            <>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/login">Login</Link>
+              </Button>
+              <Button size="sm" className="bg-gradient-blockchain hover:opacity-90" asChild>
+                <Link to="/register">Register</Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </nav>
