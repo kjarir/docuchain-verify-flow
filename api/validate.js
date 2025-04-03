@@ -1,7 +1,7 @@
 // Validate API keys
 const validApiKeys = new Set(['dk_0xf59695e6be281dab7051c1f1398a54be']);
 
-export default function handler(req, res) {
+module.exports = async (req, res) => {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -19,6 +19,10 @@ export default function handler(req, res) {
   }
 
   try {
+    // Log request details for debugging
+    console.log('Request headers:', req.headers);
+    console.log('Request body:', req.body);
+
     // Check API key
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) {
@@ -29,7 +33,7 @@ export default function handler(req, res) {
     }
 
     const apiKey = authHeader.replace('Bearer ', '');
-    if (!validApiKeys.has(apiKey)) {
+    if (apiKey !== 'dk_0xf59695e6be281dab7051c1f1398a54be') {
       return res.status(401).json({
         error: 'Unauthorized',
         message: 'Invalid API key'
@@ -37,7 +41,7 @@ export default function handler(req, res) {
     }
 
     // Check document ID
-    const { documentId } = req.body;
+    const { documentId } = req.body || {};
     if (!documentId) {
       return res.status(400).json({
         error: 'Bad Request',
@@ -54,10 +58,12 @@ export default function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('Error:', error);
+    // Log the full error for debugging
+    console.error('Validation error:', error);
     return res.status(500).json({
       error: 'Server Error',
-      message: 'An unexpected error occurred'
+      message: 'An unexpected error occurred',
+      details: error.message
     });
   }
-} 
+}; 
