@@ -9,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 // Validation endpoint
-app.post('/api/validate', async (req, res) => {
+app.post('/api/validate', (req, res) => {
   try {
     // Log request for debugging
     console.log('Request received:', {
