@@ -1,6 +1,15 @@
 // Validate API keys
 const validApiKeys = new Set(['dk_0xf59695e6be281dab7051c1f1398a54be']);
 
+// Validate document format
+const isValidDocumentId = (documentId) => {
+  // Check if documentId starts with 0x and has the correct length
+  return documentId && 
+         typeof documentId === 'string' && 
+         documentId.startsWith('0x') && 
+         documentId.length >= 42;
+};
+
 const logRequest = (req) => {
   console.log('=== Request Details ===');
   console.log('Timestamp:', new Date().toISOString());
@@ -11,7 +20,7 @@ const logRequest = (req) => {
   console.log('====================');
 };
 
-// Simple API endpoint for document validation
+// Main handler
 module.exports = async (req, res) => {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -36,6 +45,7 @@ module.exports = async (req, res) => {
     // Validate method
     if (req.method !== 'POST') {
       return res.status(405).json({
+        success: false,
         error: 'Method Not Allowed',
         message: 'Only POST requests are allowed'
       });
@@ -47,6 +57,7 @@ module.exports = async (req, res) => {
 
     if (!authHeader || authHeader !== expectedKey) {
       return res.status(401).json({
+        success: false,
         error: 'Unauthorized',
         message: 'Invalid API key',
         receivedKey: authHeader
@@ -60,6 +71,7 @@ module.exports = async (req, res) => {
         body = JSON.parse(body);
       } catch (e) {
         return res.status(400).json({
+          success: false,
           error: 'Bad Request',
           message: 'Invalid JSON body'
         });
@@ -69,18 +81,27 @@ module.exports = async (req, res) => {
     // Validate body
     if (!body || !body.documentId) {
       return res.status(400).json({
+        success: false,
         error: 'Bad Request',
         message: 'documentId is required in request body'
       });
     }
 
-    // Return success
+    // Validate document format
+    const isValid = isValidDocumentId(body.documentId);
+
+    // Return validation result
     return res.status(200).json({
       success: true,
-      isValid: true,
+      isValid: isValid,
       documentId: body.documentId,
       timestamp: new Date().toISOString(),
-      message: 'Document validation successful'
+      message: isValid ? 'Document is valid' : 'Document format is invalid',
+      details: {
+        format: isValid ? 'Valid hex format starting with 0x' : 'Invalid format',
+        length: body.documentId.length,
+        prefix: body.documentId.slice(0, 4)
+      }
     });
 
   } catch (error) {
@@ -88,6 +109,7 @@ module.exports = async (req, res) => {
     console.error('Validation error:', error);
     
     return res.status(500).json({
+      success: false,
       error: 'Internal Server Error',
       message: 'An unexpected error occurred',
       details: error.message
