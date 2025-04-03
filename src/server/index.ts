@@ -4,6 +4,9 @@ import cors from 'cors';
 const app = express();
 const port = 3001;
 
+app.use(express.json());
+
+
 // Enable CORS and JSON parsing
 app.use(cors());
 app.use(express.json());
@@ -35,6 +38,7 @@ app.post('/api/validate', async (req, res) => {
 
     // Simple validation logic
     const isValid = req.body.documentId.startsWith('0x') && req.body.documentId.length >= 42;
+    console.log('isValid', isValid);
 
     return res.status(200).json({
       success: true,
