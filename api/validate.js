@@ -86,7 +86,10 @@ module.exports = async (req, res) => {
     }
 
     // Validate document format
-    const isValid = isValidDocumentId(body.documentId);
+    const isValid = body.documentId && 
+                   typeof body.documentId === 'string' && 
+                   body.documentId.startsWith('0x') && 
+                   body.documentId.length >= 42;
 
     // Return validation result
     return res.status(200).json({
