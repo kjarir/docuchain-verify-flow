@@ -3,7 +3,6 @@ const validApiKeys = new Set(['dk_0xf59695e6be281dab7051c1f1398a54be']);
 
 // Validate document format
 const isValidDocumentId = (documentId) => {
-  // Check if documentId starts with 0x and has the correct length
   return documentId && 
          typeof documentId === 'string' && 
          documentId.startsWith('0x') && 
@@ -37,7 +36,6 @@ module.exports = async (req, res) => {
     // Log request for debugging
     console.log('Request received:', {
       method: req.method,
-      url: req.url,
       headers: req.headers,
       body: req.body
     });
@@ -52,7 +50,7 @@ module.exports = async (req, res) => {
     }
 
     // Get API key from header
-    const authHeader = req.headers['authorization'] || '';
+    const authHeader = req.headers.authorization || '';
     const expectedKey = 'Bearer dk_0xf59695e6be281dab7051c1f1398a54be';
 
     if (!authHeader || authHeader !== expectedKey) {
@@ -106,7 +104,7 @@ module.exports = async (req, res) => {
 
   } catch (error) {
     // Log error for debugging
-    console.error('Validation error:', error);
+    console.error('Error processing request:', error);
     
     return res.status(500).json({
       success: false,
