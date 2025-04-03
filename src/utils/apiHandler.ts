@@ -37,6 +37,8 @@ export const handleValidateRequest = async (req: Request): Promise<Response> => 
     // Process document validation
     const result = await validateDocument(body.documentId);
     
+    console.log("Validation result for documentId:", body.documentId, result);
+    
     return new Response(
       JSON.stringify(result),
       { status: 200, headers: { 'Content-Type': 'application/json' } }

@@ -39,6 +39,8 @@ export const validateDocument = async (documentId: string): Promise<{
   // For demo purposes, consider documents starting with 0x as valid
   const isValid = documentId.startsWith("0x");
   
+  console.log(`Validating document ID: ${documentId}, valid: ${isValid}`);
+  
   if (isValid) {
     return {
       valid: true,
