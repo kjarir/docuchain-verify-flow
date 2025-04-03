@@ -1,22 +1,23 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Key, Copy, Plus, Trash2, RefreshCw } from "lucide-react";
+import { Key, Copy, Plus, Trash2, RefreshCw, AlertCircle, Info } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { ensureDefaultApiKey, getAllApiKeys, generateApiKey, deleteApiKey, ApiKey } from "@/utils/apiKeyService";
+import { ensureDefaultApiKey, getAllApiKeys, generateApiKey, deleteApiKey, ApiKey, validateApiKey } from "@/utils/apiKeyService";
 import { useNavigate } from "react-router-dom";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import ApiTester from "@/components/ApiTester";
 
 const ApiDocsPage = () => {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [newKeyName, setNewKeyName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [selectedKey, setSelectedKey] = useState<string>("");
   const navigate = useNavigate();
 
-  // Check if user is logged in
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
     if (!isLoggedIn) {
@@ -25,16 +26,16 @@ const ApiDocsPage = () => {
       return;
     }
     
-    // Load API keys
     loadApiKeys();
   }, [navigate]);
   
   const loadApiKeys = () => {
-    // Ensure we have at least one default key
     ensureDefaultApiKey();
-    // Get all keys
     const keys = getAllApiKeys();
     setApiKeys(keys);
+    if (keys.length > 0 && !selectedKey) {
+      setSelectedKey(keys[0].key);
+    }
   };
   
   const handleCreateApiKey = () => {
@@ -64,6 +65,9 @@ const ApiDocsPage = () => {
       if (success) {
         setApiKeys(prev => prev.filter(k => k.key !== key));
         toast.success("API key deleted successfully");
+        if (selectedKey === key && apiKeys.length > 1) {
+          setSelectedKey(apiKeys[0].key !== key ? apiKeys[0].key : apiKeys[1].key);
+        }
       } else {
         toast.error("Failed to delete API key");
       }
@@ -86,6 +90,10 @@ const ApiDocsPage = () => {
     );
   };
 
+  const getBaseUrl = () => {
+    return window.location.origin;
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -98,6 +106,15 @@ const ApiDocsPage = () => {
               Access DocuChain's blockchain document services programmatically through our REST API.
             </p>
           </div>
+          
+          <Alert className="mb-6">
+            <AlertCircle className="h-5 w-5" />
+            <AlertTitle>Local API Only</AlertTitle>
+            <AlertDescription>
+              Currently, the API is running locally and accessible only through this application. 
+              To use the API endpoints, please use the base URL: <code className="bg-gray-100 px-2 py-1 rounded">{getBaseUrl()}/api</code>
+            </AlertDescription>
+          </Alert>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             <div className="md:col-span-2 space-y-6">
@@ -136,7 +153,7 @@ const ApiDocsPage = () => {
                             <div>
                               <div className="font-medium">{apiKey.name}</div>
                               <div className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                                <span className="font-mono">{apiKey.key.substring(0, 12)}...</span>
+                                <span className="font-mono">{apiKey.key}</span>
                                 <button 
                                   onClick={() => copyToClipboard(apiKey.key)} 
                                   className="text-primary hover:text-primary/90"
@@ -181,7 +198,7 @@ const ApiDocsPage = () => {
                         All API requests require authentication using an API key. Include your API key in the header of your requests.
                       </p>
                       <div className="bg-gray-100 p-3 rounded font-mono text-sm">
-                        Authorization: Bearer YOUR_API_KEY
+                        Authorization: Bearer {selectedKey || "YOUR_API_KEY"}
                       </div>
                     </div>
                     
@@ -191,7 +208,7 @@ const ApiDocsPage = () => {
                         Validate a document's authenticity on the blockchain.
                       </p>
                       <div className="bg-gray-100 p-3 rounded font-mono text-sm">
-                        POST /api/v1/validate
+                        POST {getBaseUrl()}/api/validate
                       </div>
                       <div className="mt-2 mb-3 text-sm">
                         <span className="font-semibold">Request Body:</span>
@@ -209,7 +226,7 @@ const ApiDocsPage = () => {
                         Create and register a new document on the blockchain.
                       </p>
                       <div className="bg-gray-100 p-3 rounded font-mono text-sm">
-                        POST /api/v1/generate
+                        POST {getBaseUrl()}/api/generate
                       </div>
                       <div className="mt-2 mb-3 text-sm">
                         <span className="font-semibold">Request Body:</span>
@@ -238,8 +255,8 @@ const ApiDocsPage = () => {
                   <div className="space-y-4">
                     <h3 className="font-medium">CURL Example</h3>
                     <div className="bg-gray-100 p-3 rounded font-mono text-xs overflow-x-auto whitespace-pre-wrap">
-{`curl -X POST https://api.docuchain.example/v1/validate \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
+{`curl -X POST ${getBaseUrl()}/api/validate \\
+  -H "Authorization: Bearer ${selectedKey || "YOUR_API_KEY"}" \\
   -H "Content-Type: application/json" \\
   -d '{
     "documentId": "0x1234567890abcdef1234567890abcdef"
@@ -253,11 +270,11 @@ const ApiDocsPage = () => {
 async function validateDocument(documentId) {
   try {
     const response = await axios.post(
-      'https://api.docuchain.example/v1/validate',
+      '${getBaseUrl()}/api/validate',
       { documentId },
       {
         headers: {
-          'Authorization': 'Bearer YOUR_API_KEY',
+          'Authorization': 'Bearer ${selectedKey || "YOUR_API_KEY"}',
           'Content-Type': 'application/json'
         }
       }
