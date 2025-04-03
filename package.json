@@ -9,7 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server": "tsx src/server/index.ts"
+    "server": "node src/server/api.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

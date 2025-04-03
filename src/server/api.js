@@ -2,17 +2,16 @@ const express = require('express');
 const cors = require('cors');
 
 const app = express();
-const port = process.env.PORT || 3001;
-
-// Valid API keys
-const validApiKeys = new Set(['dk_0xf59695e6be281dab7051c1f1398a54be']);
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
+// Valid API keys
+const validApiKeys = new Set(['dk_0xf59695e6be281dab7051c1f1398a54be']);
+
 // Root endpoint
-app.get('/', (_req, res) => {
+app.get('/', (req, res) => {
   res.json({ message: 'API is working' });
 });
 
@@ -63,7 +62,7 @@ app.post('/api/validate', (req, res) => {
 });
 
 // Handle 404
-app.use((_req, res) => {
+app.use((req, res) => {
   res.status(404).json({
     error: 'Not Found',
     message: 'The requested endpoint does not exist'
@@ -71,7 +70,7 @@ app.use((_req, res) => {
 });
 
 // Error handler
-app.use((err, _req, res, _next) => {
+app.use((err, req, res, next) => {
   console.error('Global error:', err);
   res.status(500).json({
     error: 'Server Error',
@@ -79,12 +78,4 @@ app.use((err, _req, res, _next) => {
   });
 });
 
-// Start server
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-  });
-}
-
-// Export for Vercel
 module.exports = app; 
