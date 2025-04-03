@@ -9,21 +9,15 @@ app.use(cors());
 app.use(express.json());
 
 // Validation endpoint
-app.post('/api/validate', (req, res) => {
+app.post('/api/validate', async (req, res) => {
   try {
-    // Log request for debugging
-    console.log('Request received:', {
-      method: req.method,
+    console.log('Received request:', {
       headers: req.headers,
       body: req.body
     });
 
-    // Get API key from header
     const authHeader = req.headers.authorization;
-    const expectedKey = 'Bearer dk_0xf59695e6be281dab7051c1f1398a54be';
-
-    if (!authHeader || authHeader !== expectedKey) {
-      console.log('Invalid API key:', { received: authHeader, expected: expectedKey });
+    if (!authHeader || authHeader !== 'Bearer dk_0xf59695e6be281dab7051c1f1398a54be') {
       return res.status(401).json({
         success: false,
         error: 'Unauthorized',
@@ -31,50 +25,29 @@ app.post('/api/validate', (req, res) => {
       });
     }
 
-    // Validate request body
-    if (!req.body || !req.body.documentId) {
-      console.log('Missing documentId in request');
+    if (!req.body?.documentId) {
       return res.status(400).json({
         success: false,
         error: 'Bad Request',
-        message: 'documentId is required in request body'
+        message: 'documentId is required'
       });
     }
 
-    const documentId = req.body.documentId;
+    // Simple validation logic
+    const isValid = req.body.documentId.startsWith('0x') && req.body.documentId.length >= 42;
 
-    // Validate document format
-    const isValid = documentId && 
-                   typeof documentId === 'string' && 
-                   documentId.startsWith('0x') && 
-                   documentId.length >= 42;
-
-    console.log('Document validation result:', {
-      documentId,
-      isValid
-    });
-
-    // Return validation result
     return res.status(200).json({
       success: true,
       isValid,
-      documentId,
-      timestamp: new Date().toISOString(),
-      message: isValid ? 'Document is valid' : 'Document format is invalid',
-      details: {
-        format: isValid ? 'Valid hex format starting with 0x' : 'Invalid format',
-        length: documentId.length,
-        prefix: documentId.slice(0, 4)
-      }
+      documentId: req.body.documentId
     });
 
   } catch (error) {
-    console.error('Error processing request:', error);
+    console.error('Error:', error);
     return res.status(500).json({
       success: false,
-      error: 'Internal Server Error',
-      message: 'An unexpected error occurred',
-      details: error.message
+      error: 'Server Error',
+      message: error.message
     });
   }
 });
