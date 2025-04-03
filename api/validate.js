@@ -1,22 +1,23 @@
-const express = require('express');
-const cors = require('cors');
-
-const app = express();
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// Valid API keys
+// Validate API keys
 const validApiKeys = new Set(['dk_0xf59695e6be281dab7051c1f1398a54be']);
 
-// Root endpoint
-app.get('/', (req, res) => {
-  res.json({ message: 'API is working' });
-});
+export default function handler(req, res) {
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
 
-// Validate endpoint
-app.post('/api/validate', (req, res) => {
+  // Handle OPTIONS request
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  // Only allow POST requests
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   try {
     // Check API key
     const authHeader = req.headers.authorization;
@@ -59,23 +60,4 @@ app.post('/api/validate', (req, res) => {
       message: 'An unexpected error occurred'
     });
   }
-});
-
-// Handle 404
-app.use((req, res) => {
-  res.status(404).json({
-    error: 'Not Found',
-    message: 'The requested endpoint does not exist'
-  });
-});
-
-// Error handler
-app.use((err, req, res, next) => {
-  console.error('Global error:', err);
-  res.status(500).json({
-    error: 'Server Error',
-    message: 'An unexpected error occurred'
-  });
-});
-
-module.exports = app; 
+} 
