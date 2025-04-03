@@ -11,6 +11,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ValidationBlock from "@/components/ValidationBlock";
 import { generateDocument } from "@/utils/blockchainUtils";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const GeneratePage = () => {
   const [template, setTemplate] = useState("");
@@ -29,6 +31,16 @@ const GeneratePage = () => {
     blockNumber?: string;
     transactionHash?: string;
   } | null>(null);
+  const navigate = useNavigate();
+  
+  // Check if user is logged in
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+    if (!isLoggedIn) {
+      toast.error("Please log in to generate documents");
+      navigate("/login");
+    }
+  }, [navigate]);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -70,7 +82,10 @@ const GeneratePage = () => {
   };
 
   const handleDownloadDocument = () => {
-    if (!documentResult) return;
+    if (!documentResult) {
+      toast.error("No document to download");
+      return;
+    }
     
     // Create a blob with the document content
     const documentContent = `
@@ -104,7 +119,10 @@ const GeneratePage = () => {
   };
 
   const handleViewOnBlockchain = () => {
-    if (!documentResult?.transactionHash) return;
+    if (!documentResult?.transactionHash) {
+      toast.error("No blockchain transaction to view");
+      return;
+    }
     
     // In a real application, this would link to a real blockchain explorer
     // For now, we'll use a mock URL

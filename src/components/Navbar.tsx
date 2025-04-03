@@ -44,9 +44,14 @@ const Navbar = () => {
             Generate
           </Link>
           {isLoggedIn && (
-            <Link to="/dashboard" className="text-sm font-medium hover:text-primary transition-colors">
-              Dashboard
-            </Link>
+            <>
+              <Link to="/dashboard" className="text-sm font-medium hover:text-primary transition-colors">
+                Dashboard
+              </Link>
+              <Link to="/api" className="text-sm font-medium hover:text-primary transition-colors">
+                API
+              </Link>
+            </>
           )}
         </div>
         
