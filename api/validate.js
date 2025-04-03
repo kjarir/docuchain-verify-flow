@@ -5,7 +5,7 @@ const logRequest = (req) => {
   console.log('=== Request Details ===');
   console.log('Timestamp:', new Date().toISOString());
   console.log('Method:', req.method);
-  console.log('URL:', req.url);
+  console.log('Path:', req.path);
   console.log('Headers:', JSON.stringify(req.headers, null, 2));
   console.log('Body:', JSON.stringify(req.body, null, 2));
   console.log('====================');
@@ -39,7 +39,7 @@ module.exports = async (req, res) => {
     }
 
     // Check API key
-    const authHeader = req.headers.authorization;
+    const authHeader = req.headers['authorization'] || '';
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       console.log('Missing or invalid authorization header:', authHeader);
       return res.status(401).json({
@@ -48,7 +48,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    const apiKey = authHeader.replace('Bearer ', '');
+    const apiKey = authHeader.replace('Bearer ', '').trim();
     if (!validApiKeys.has(apiKey)) {
       console.log('Invalid API key:', apiKey);
       return res.status(401).json({
