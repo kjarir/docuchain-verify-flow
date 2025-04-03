@@ -8,14 +8,6 @@ const port = 3001;
 app.use(cors());
 app.use(express.json());
 
-// Validate document format
-const isValidDocumentId = (documentId: string): boolean => {
-  return documentId && 
-         typeof documentId === 'string' && 
-         documentId.startsWith('0x') && 
-         documentId.length >= 42;
-};
-
 // Validation endpoint
 app.post('/api/validate', async (req, res) => {
   try {
@@ -27,34 +19,21 @@ app.post('/api/validate', async (req, res) => {
     });
 
     // Get API key from header
-    const authHeader = req.headers.authorization || '';
+    const authHeader = req.headers.authorization;
     const expectedKey = 'Bearer dk_0xf59695e6be281dab7051c1f1398a54be';
 
     if (!authHeader || authHeader !== expectedKey) {
+      console.log('Invalid API key:', { received: authHeader, expected: expectedKey });
       return res.status(401).json({
         success: false,
         error: 'Unauthorized',
-        message: 'Invalid API key',
-        receivedKey: authHeader
+        message: 'Invalid API key'
       });
     }
 
-    // Parse body if needed
-    let body = req.body;
-    if (typeof body === 'string') {
-      try {
-        body = JSON.parse(body);
-      } catch (e) {
-        return res.status(400).json({
-          success: false,
-          error: 'Bad Request',
-          message: 'Invalid JSON body'
-        });
-      }
-    }
-
-    // Validate body
-    if (!body || !body.documentId) {
+    // Validate request body
+    if (!req.body || !req.body.documentId) {
+      console.log('Missing documentId in request');
       return res.status(400).json({
         success: false,
         error: 'Bad Request',
@@ -62,20 +41,30 @@ app.post('/api/validate', async (req, res) => {
       });
     }
 
+    const documentId = req.body.documentId;
+
     // Validate document format
-    const isValid = isValidDocumentId(body.documentId);
+    const isValid = documentId && 
+                   typeof documentId === 'string' && 
+                   documentId.startsWith('0x') && 
+                   documentId.length >= 42;
+
+    console.log('Document validation result:', {
+      documentId,
+      isValid
+    });
 
     // Return validation result
     return res.status(200).json({
       success: true,
-      isValid: isValid,
-      documentId: body.documentId,
+      isValid,
+      documentId,
       timestamp: new Date().toISOString(),
       message: isValid ? 'Document is valid' : 'Document format is invalid',
       details: {
         format: isValid ? 'Valid hex format starting with 0x' : 'Invalid format',
-        length: body.documentId.length,
-        prefix: body.documentId.slice(0, 4)
+        length: documentId.length,
+        prefix: documentId.slice(0, 4)
       }
     });
 
@@ -95,6 +84,7 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
+// Start server
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`Server running at http://localhost:${port}`);
 }); 
