@@ -22,32 +22,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// API route handler
-if (typeof window !== 'undefined') {
-  const apiBase = '/api';
-  
-  // Set up route handlers for API endpoints
-  const originalFetch = window.fetch;
-  window.fetch = async (input, init) => {
-    const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
-    
-    // Handle API routes
-    if (url.startsWith(apiBase)) {
-      const path = url.slice(apiBase.length);
-      const request = new Request(url, init);
-      
-      if (path === '/validate') {
-        return handleValidateRequest(request);
-      } else if (path === '/generate') {
-        return handleGenerateRequest(request);
-      }
-    }
-    
-    // Pass through to original fetch for all other requests
-    return originalFetch(input, init);
-  };
-}
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
