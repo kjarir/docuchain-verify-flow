@@ -39,8 +39,22 @@ app.post('/api/validate', async (req, res) => {
       });
     }
 
-    // Validate request body
-    if (!req.body || !req.body.documentId) {
+    // Parse body if needed
+    let body = req.body;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch (e) {
+        return res.status(400).json({
+          success: false,
+          error: 'Bad Request',
+          message: 'Invalid JSON body'
+        });
+      }
+    }
+
+    // Validate body
+    if (!body || !body.documentId) {
       return res.status(400).json({
         success: false,
         error: 'Bad Request',
@@ -49,19 +63,19 @@ app.post('/api/validate', async (req, res) => {
     }
 
     // Validate document format
-    const isValid = isValidDocumentId(req.body.documentId);
+    const isValid = isValidDocumentId(body.documentId);
 
     // Return validation result
     return res.status(200).json({
       success: true,
       isValid: isValid,
-      documentId: req.body.documentId,
+      documentId: body.documentId,
       timestamp: new Date().toISOString(),
       message: isValid ? 'Document is valid' : 'Document format is invalid',
       details: {
         format: isValid ? 'Valid hex format starting with 0x' : 'Invalid format',
-        length: req.body.documentId.length,
-        prefix: req.body.documentId.slice(0, 4)
+        length: body.documentId.length,
+        prefix: body.documentId.slice(0, 4)
       }
     });
 
@@ -74,6 +88,11 @@ app.post('/api/validate', async (req, res) => {
       details: error.message
     });
   }
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
 });
 
 app.listen(port, () => {
