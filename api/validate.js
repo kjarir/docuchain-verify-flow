@@ -24,14 +24,15 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  // Log request for debugging
-  console.log('Request received:', {
-    method: req.method,
-    headers: req.headers,
-    body: req.body
-  });
-
   try {
+    // Log request for debugging
+    console.log('Request received:', {
+      method: req.method,
+      url: req.url,
+      headers: req.headers,
+      body: req.body
+    });
+
     // Validate method
     if (req.method !== 'POST') {
       return res.status(405).json({
@@ -41,19 +42,32 @@ module.exports = async (req, res) => {
     }
 
     // Get API key from header
-    const authHeader = req.headers['authorization'] || req.headers.authorization;
+    const authHeader = req.headers['authorization'] || '';
     const expectedKey = 'Bearer dk_0xf59695e6be281dab7051c1f1398a54be';
 
     if (!authHeader || authHeader !== expectedKey) {
       return res.status(401).json({
         error: 'Unauthorized',
-        message: 'Invalid API key'
+        message: 'Invalid API key',
+        receivedKey: authHeader
       });
     }
 
+    // Parse body if needed
+    let body = req.body;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch (e) {
+        return res.status(400).json({
+          error: 'Bad Request',
+          message: 'Invalid JSON body'
+        });
+      }
+    }
+
     // Validate body
-    const { documentId } = req.body || {};
-    if (!documentId) {
+    if (!body || !body.documentId) {
       return res.status(400).json({
         error: 'Bad Request',
         message: 'documentId is required in request body'
@@ -64,16 +78,19 @@ module.exports = async (req, res) => {
     return res.status(200).json({
       success: true,
       isValid: true,
-      documentId,
+      documentId: body.documentId,
       timestamp: new Date().toISOString(),
       message: 'Document validation successful'
     });
 
   } catch (error) {
-    console.error('Error:', error);
+    // Log error for debugging
+    console.error('Validation error:', error);
+    
     return res.status(500).json({
       error: 'Internal Server Error',
-      message: error.message
+      message: 'An unexpected error occurred',
+      details: error.message
     });
   }
 }; 
