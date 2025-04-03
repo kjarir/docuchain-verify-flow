@@ -9,6 +9,7 @@ import ValidatePage from "./pages/ValidatePage";
 import GeneratePage from "./pages/GeneratePage";
 import DashboardPage from "./pages/DashboardPage";
 import NotFound from "./pages/NotFound";
+import ApiDocsPage from "./pages/ApiDocsPage";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/validate" element={<ValidatePage />} />
           <Route path="/generate" element={<GeneratePage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/api" element={<ApiDocsPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

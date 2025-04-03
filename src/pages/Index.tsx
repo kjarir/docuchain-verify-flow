@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Shield, FileText, Lock, RefreshCw, Key, Database } from "lucide-react";
+import { Shield, FileText, Lock, RefreshCw, Key, Database, Check } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BlockchainAnimation from "@/components/BlockchainAnimation";
