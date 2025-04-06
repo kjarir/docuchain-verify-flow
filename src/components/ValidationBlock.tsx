@@ -1,4 +1,3 @@
-
 import { Check, Clock, AlertTriangle } from "lucide-react";
 
 type ValidationStatus = "verified" | "pending" | "failed";
@@ -9,6 +8,8 @@ interface ValidationBlockProps {
   timestamp: string;
   blockNumber?: string;
   transactionHash?: string;
+  onDownload: () => void;
+  onView: () => void;
 }
 
 const ValidationBlock = ({
@@ -17,6 +18,8 @@ const ValidationBlock = ({
   timestamp,
   blockNumber,
   transactionHash,
+  onDownload,
+  onView
 }: ValidationBlockProps) => {
   const getStatusContent = () => {
     switch (status) {
@@ -29,10 +32,10 @@ const ValidationBlock = ({
         };
       case "pending":
         return {
-          icon: <Clock className="text-amber-500" />,
+          icon: <Clock className="text-yellow-500" />,
           text: "Pending",
-          bgColor: "bg-amber-100",
-          borderColor: "border-amber-200",
+          bgColor: "bg-yellow-100",
+          borderColor: "border-yellow-200",
         };
       case "failed":
         return {
@@ -54,9 +57,7 @@ const ValidationBlock = ({
   const statusContent = getStatusContent();
 
   return (
-    <div
-      className={`rounded-lg ${statusContent.bgColor} ${statusContent.borderColor} border p-5 transition-all hover:shadow-md`}
-    >
+    <div className={`rounded-lg ${statusContent.bgColor} ${statusContent.borderColor} border p-5 transition-all hover:shadow-md`}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           {statusContent.icon}
@@ -89,6 +90,11 @@ const ValidationBlock = ({
           </div>
         )}
       </div>
+
+      {/* <div className="flex gap-2 mt-4">
+        <Button onClick={onDownload} variant="outline">Download</Button>
+        <Button onClick={onView} variant="outline">View on Blockchain</Button>
+      </div> */}
     </div>
   );
 };
