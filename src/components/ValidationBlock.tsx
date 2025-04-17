@@ -1,14 +1,16 @@
-import { Check, Clock, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { CheckCircle2, XCircle, AlertCircle, Download, ExternalLink } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-type ValidationStatus = "verified" | "pending" | "failed";
-
-interface ValidationBlockProps {
-  status: ValidationStatus;
+export interface ValidationBlockProps {
+  status: string;
   documentId: string;
-  signature?: string;
-  issuer?: string;
+  signature: string;
+  issuer: string;
   timestamp: string;
+  title?: string;
+  content?: any;
   blockNumber?: string;
   transactionHash?: string;
   onDownload: () => void;
@@ -16,95 +18,173 @@ interface ValidationBlockProps {
   children?: React.ReactNode;
 }
 
-const ValidationBlock = ({
+const ValidationBlock: React.FC<ValidationBlockProps> = ({
   status,
   documentId,
   signature,
   issuer,
   timestamp,
+  title,
+  content,
   blockNumber,
   transactionHash,
   onDownload,
   onView,
-  children
-}: ValidationBlockProps) => {
-  const getStatusContent = () => {
-    switch (status) {
-      case "verified":
+}) => {
+  const getStatusConfig = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'verified':
         return {
-          icon: <Check className="text-green-500" />,
-          text: "Verified",
-          bgColor: "bg-green-100",
-          borderColor: "border-green-200",
+          icon: CheckCircle2,
+          color: 'text-green-600',
+          bgColor: 'bg-green-50',
+          borderColor: 'border-green-200',
+          text: 'Document Verified'
         };
-      case "pending":
+      case 'failed':
         return {
-          icon: <Clock className="text-yellow-500" />,
-          text: "Pending",
-          bgColor: "bg-yellow-100",
-          borderColor: "border-yellow-200",
-        };
-      case "failed":
-        return {
-          icon: <AlertTriangle className="text-red-500" />,
-          text: "Failed",
-          bgColor: "bg-red-100",
-          borderColor: "border-red-200",
+          icon: XCircle,
+          color: 'text-red-600',
+          bgColor: 'bg-red-50',
+          borderColor: 'border-red-200',
+          text: 'Verification Failed'
         };
       default:
         return {
-          icon: <Clock className="text-gray-500" />,
-          text: "Unknown",
-          bgColor: "bg-gray-100",
-          borderColor: "border-gray-200",
+          icon: AlertCircle,
+          color: 'text-yellow-600',
+          bgColor: 'bg-yellow-50',
+          borderColor: 'border-yellow-200',
+          text: 'Pending Verification'
         };
     }
   };
 
-  const statusContent = getStatusContent();
+  const formatTitle = (title: string) => {
+    try {
+      // Check if the title is a JSON string
+      const parsed = JSON.parse(title);
+      if (typeof parsed === 'object' && parsed.title) {
+        return parsed.title;
+      }
+      return title;
+    } catch {
+      return title;
+    }
+  };
+
+  const formatDate = (timestamp: string) => {
+    try {
+      const date = new Date(parseInt(timestamp));
+      return date.toLocaleString();
+    } catch (e) {
+      return timestamp;
+    }
+  };
+
+  const shortenAddress = (address: string) => {
+    if (address.length > 10) {
+      return `${address.slice(0, 6)}...${address.slice(-4)}`;
+    }
+    return address;
+  };
+
+  const statusConfig = getStatusConfig(status);
+  const StatusIcon = statusConfig.icon;
+  const formattedTitle = title ? formatTitle(title) : '';
 
   return (
-    <div className={`rounded-lg ${statusContent.bgColor} ${statusContent.borderColor} border p-5 transition-all hover:shadow-md`}>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          {statusContent.icon}
-          <span className="font-medium">{statusContent.text}</span>
-        </div>
-        <span className="text-xs text-gray-500">{timestamp}</span>
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-500">Document ID:</span>
-          <span className="font-mono font-medium truncate max-w-[200px]">
-            {documentId}
-          </span>
-        </div>
-
-        {blockNumber && (
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Block Number:</span>
-            <span className="font-mono font-medium">{blockNumber}</span>
+    <Card className={cn("border-2", statusConfig.borderColor)}>
+      <CardContent className="pt-6">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <StatusIcon className={cn("h-5 w-5", statusConfig.color)} />
+              <h3 className={cn("text-lg font-semibold", statusConfig.color)}>
+                {statusConfig.text}
+              </h3>
+            </div>
+            <div className="space-x-2">
+              <Button 
+                onClick={onDownload} 
+                variant="outline"
+                className="flex items-center gap-1"
+              >
+                <Download className="h-4 w-4" />
+                Download
+              </Button>
+              <Button 
+                onClick={onView}
+                className="flex items-center gap-1"
+              >
+                <ExternalLink className="h-4 w-4" />
+                View on Explorer
+              </Button>
+            </div>
           </div>
-        )}
 
-        {transactionHash && (
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">TX Hash:</span>
-            <span className="font-mono font-medium truncate max-w-[200px]">
-              {transactionHash}
-            </span>
+          <div className={cn("p-4 rounded-lg space-y-3", statusConfig.bgColor)}>
+            {formattedTitle && (
+              <div className="flex justify-between items-start">
+                <span className="font-medium text-gray-700 min-w-[120px]">Title:</span>
+                <div className="text-gray-900 text-right flex-1 ml-4 break-words">
+                  {formattedTitle}
+                </div>
+              </div>
+            )}
+            <div className="flex justify-between items-start">
+              <span className="font-medium text-gray-700 min-w-[120px]">Document ID:</span>
+              <div className="text-gray-900 font-mono text-sm text-right flex-1 ml-4 break-all">
+                {documentId}
+              </div>
+            </div>
+            <div className="flex justify-between items-start">
+              <span className="font-medium text-gray-700 min-w-[120px]">Issuer:</span>
+              <div className="text-gray-900 font-mono text-sm text-right flex-1 ml-4">
+                {issuer.startsWith('0x') ? shortenAddress(issuer) : issuer}
+              </div>
+            </div>
+            <div className="flex justify-between items-start">
+              <span className="font-medium text-gray-700 min-w-[120px]">Timestamp:</span>
+              <div className="text-gray-900 text-right flex-1 ml-4">
+                {formatDate(timestamp)}
+              </div>
+            </div>
+            {blockNumber && (
+              <div className="flex justify-between items-start">
+                <span className="font-medium text-gray-700 min-w-[120px]">Block Number:</span>
+                <div className="text-gray-900 font-mono text-sm text-right flex-1 ml-4">
+                  {blockNumber}
+                </div>
+              </div>
+            )}
+            {transactionHash && (
+              <div className="flex justify-between items-start">
+                <span className="font-medium text-gray-700 min-w-[120px]">Transaction:</span>
+                <div className="text-gray-900 font-mono text-sm text-right flex-1 ml-4 break-all">
+                  {transactionHash}
+                </div>
+              </div>
+            )}
+            <div className="flex justify-between items-start">
+              <span className="font-medium text-gray-700 min-w-[120px]">Signature:</span>
+              <div className="text-gray-900 font-mono text-sm text-right flex-1 ml-4 break-all">
+                {signature}
+              </div>
+            </div>
           </div>
-        )}
-      </div>
 
-      <div className="flex gap-2 mt-4">
-        <Button onClick={onDownload} variant="outline">Download</Button>
-        <Button onClick={onView} variant="outline">View on Blockchain</Button>
-      </div>
-      
-      {children}
-    </div>
+          {content && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <h4 className="font-medium mb-2 text-gray-700">Additional Details</h4>
+              <pre className="text-sm overflow-auto bg-white p-3 rounded border">
+                {JSON.stringify(content, null, 2)}
+              </pre>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

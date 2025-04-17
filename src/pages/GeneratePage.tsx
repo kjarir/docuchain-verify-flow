@@ -1,131 +1,116 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText } from "lucide-react";
 import { toast } from "sonner";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import ValidationBlock from "@/components/ValidationBlock";
-import { useNavigate } from "react-router-dom";
+import { uploadToPinata } from '@/utils/ipfsUtils';
 import { ethers } from "ethers";
 import { getContract } from "@/utils/contractUtils";
-import { MEGAETH_NETWORK_CONFIG } from "@/contracts/contractInfo";
-import { create } from 'ipfs-http-client';
-import { Buffer } from 'buffer';
-import { Document, Page } from 'react-pdf';
 import pdfMake from 'pdfmake/build/pdfmake';
 import { TDocumentDefinitions } from 'pdfmake/interfaces';
-import vfsFonts from 'pdfmake/build/vfs_fonts';
-import QRCode from 'qrcode';
+import Navbar from "@/components/Navbar";
 
-// Initialize pdfMake with fonts
-(pdfMake as any).vfs = (vfsFonts as any).default || vfsFonts;
-
-// Define fonts
-const fonts = {
+// Configure fonts for pdfMake
+pdfMake.fonts = {
   Roboto: {
-    normal: 'Roboto-Regular.ttf',
-    bold: 'Roboto-Medium.ttf',
-    italics: 'Roboto-Italic.ttf',
-    bolditalics: 'Roboto-MediumItalic.ttf'
+    normal: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf',
+    bold: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Medium.ttf',
+    italics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Italic.ttf',
+    bolditalics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-MediumItalic.ttf'
   }
 };
 
 const GeneratePage = () => {
-  const [template, setTemplate] = useState("");
   const [formData, setFormData] = useState({
+    template: "",
     title: "",
     description: "",
     parties: "",
     content: "",
+    ipfsHash: ""
   });
-  const [generating, setGenerating] = useState(false);
-  const [generated, setGenerated] = useState(false);
-  const [documentResult, setDocumentResult] = useState<any>(null);
-  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{
+    ipfsHash: string;
+    transactionHash: string;
+    documentId: string;
+  } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-    if (!isLoggedIn) {
-      toast.error("Please log in to generate documents");
-      navigate("/login");
-    }
-  }, [navigate]);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const generateQRCode = async (verificationData: string) => {
-    try {
-      // Create a verification URL with all necessary data
-      const verificationUrl = `${window.location.origin}/verify?data=${encodeURIComponent(verificationData)}`;
-      const qrDataUrl = await QRCode.toDataURL(verificationUrl);
-      return qrDataUrl;
-    } catch (err) {
-      console.error("Error generating QR code:", err);
-      return null;
-    }
-  };
-
-  const generatePDF = async (documentData: any): Promise<Blob> => {
-    const currentDate = new Date().toLocaleDateString();
-    const { hash, signature, verificationData } = documentData;
-    const qrCodeDataUrl = await generateQRCode(verificationData);
-    
+  const generatePDF = async (data: typeof formData): Promise<Blob> => {
     const docDefinition: TDocumentDefinitions = {
       content: [
-        { text: formData.title, style: 'header' as const },
-        { text: currentDate, alignment: 'right' as const, margin: [0, 0, 0, 20] },
-        { text: 'Description:', style: 'subheader' as const },
-        { text: formData.description, margin: [0, 0, 0, 10] },
-        { text: 'Parties Involved:', style: 'subheader' as const },
-        { text: formData.parties, margin: [0, 0, 0, 10] },
-        { text: 'Content:', style: 'subheader' as const },
-        { text: formData.content, margin: [0, 0, 0, 20] },
-        { text: '───────────────────────────────', alignment: 'center' as const },
-        { text: 'Document Verification', style: 'subheader' as const, alignment: 'center' as const },
-        { text: 'This document is digitally signed and verified on blockchain', style: 'caption' as const },
-        { text: `Document ID: ${hash}`, style: 'verification' as const },
-        { text: `Digital Signature: ${signature}`, style: 'verification' as const },
-        qrCodeDataUrl ? { image: qrCodeDataUrl, width: 100, alignment: 'center' as const } : [],
-        { text: 'Scan QR code or visit our website to verify this document', style: 'caption' as const },
-        { text: 'Any modification to this document will invalidate the digital signature', style: 'warning' as const },
-        { text: '───────────────────────────────', alignment: 'center' as const },
+        {
+          text: data.title,
+          style: 'header',
+          alignment: 'center',
+          margin: [0, 0, 0, 20]
+        },
+        {
+          text: data.template,
+          style: 'content',
+          margin: [0, 0, 0, 20]
+        },
+        {
+          stack: [
+            {
+              columns: [
+                {
+                  stack: [
+                    { text: 'Document Details', style: 'subheader', margin: [0, 0, 0, 10] },
+                    { text: 'Title:', style: 'label', margin: [0, 0, 0, 5] },
+                    { text: data.title, style: 'value', margin: [0, 0, 0, 10] },
+                    { text: 'Generated on:', style: 'label', margin: [0, 0, 0, 5] },
+                    { text: new Date().toLocaleString(), style: 'value', margin: [0, 0, 0, 10] },
+                    { text: 'IPFS Hash:', style: 'label', margin: [0, 0, 0, 5] },
+                    { text: data.ipfsHash || 'Pending...', style: 'hash' }
+                  ],
+                  width: '*'
+                }
+              ]
+            }
+          ],
+          style: 'metadata'
+        }
       ],
       styles: {
         header: {
-          fontSize: 22,
+          fontSize: 24,
           bold: true,
-          margin: [0, 0, 0, 10]
+          color: '#2563eb',
+          font: 'Roboto'
         },
         subheader: {
-          fontSize: 14,
+          fontSize: 18,
           bold: true,
-          margin: [0, 10, 0, 5]
+          color: '#1e40af',
+          font: 'Roboto'
         },
-        verification: {
+        content: {
+          fontSize: 12,
+          lineHeight: 1.5,
+          font: 'Roboto'
+        },
+        label: {
           fontSize: 10,
-          color: 'grey',
-          alignment: 'center',
-          margin: [0, 5, 0, 5]
+          color: '#6b7280',
+          bold: true,
+          font: 'Roboto'
         },
-        caption: {
-          fontSize: 8,
-          color: 'grey',
-          alignment: 'center',
-          margin: [0, 5, 0, 5]
+        value: {
+          fontSize: 12,
+          font: 'Roboto'
         },
-        warning: {
-          fontSize: 8,
-          color: 'red',
-          alignment: 'center',
-          margin: [0, 5, 0, 20]
+        hash: {
+          fontSize: 10,
+          color: '#4b5563',
+          font: 'Roboto'
+        },
+        metadata: {
+          margin: [10, 20, 10, 10],
+          background: '#f3f4f6'
         }
       },
       defaultStyle: {
@@ -141,208 +126,199 @@ const GeneratePage = () => {
     });
   };
 
-  const handleGenerateDocument = async () => {
-    if (!template || !formData.title) {
-      toast.error("Please select a template and enter a title");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title || !formData.template) {
+      toast.error("Please fill in all required fields");
       return;
     }
+
+    setLoading(true);
+    setError(null);
 
     try {
-      setGenerating(true);
+      // First generate PDF without IPFS hash
+      const initialPdfBlob = await generatePDF(formData);
+      
+      // Upload to IPFS
+      const formDataWithFile = new FormData();
+      formDataWithFile.append('file', new File([initialPdfBlob], `${formData.title}.pdf`));
+      
+      const ipfsResult = await uploadToPinata(formDataWithFile);
+      const ipfsHash = ipfsResult.IpfsHash;
 
-      // Get the signer
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const address = await signer.getAddress();
+      // Generate final PDF with IPFS hash
+      const finalPdfBlob = await generatePDF({ ...formData, ipfsHash });
+      
+      // Upload final version to IPFS
+      const finalFormData = new FormData();
+      finalFormData.append('file', new File([finalPdfBlob], `${formData.title}.pdf`));
+      
+      const finalIpfsResult = await uploadToPinata(finalFormData);
 
-      // Create document data
-      const documentData = {
-        template,
-        title: formData.title,
-        description: formData.description,
-        parties: formData.parties,
-        content: formData.content,
-        issuer: address,
-        timestamp: new Date().toISOString()
-      };
-
-      // Create document hash
-      const contentHash = ethers.utils.keccak256(
-        ethers.utils.toUtf8Bytes(JSON.stringify(documentData))
-      );
-
-      // Sign the hash
-      const signature = await signer.signMessage(ethers.utils.arrayify(contentHash));
-
-      // Create verification data
-      const verificationData = JSON.stringify({
-        hash: contentHash,
-        signature,
-        issuer: address,
-        title: formData.title,
-        timestamp: documentData.timestamp
-      });
-
-      // Generate PDF with embedded verification data
-      const pdfBlob = await generatePDF({
-        hash: contentHash,
-        signature,
-        verificationData
-      });
-      setPdfBlob(pdfBlob);
-
-      // Store on blockchain with searchable data
+      // Store on blockchain
       const contract = await getContract();
       const tx = await contract.addDocumentWithMetadata(
-        contentHash,
-        signature,
+        ethers.utils.keccak256(ethers.utils.toUtf8Bytes(finalIpfsResult.IpfsHash)),
+        finalIpfsResult.IpfsHash,
         formData.title,
-        address
+        await contract.signer.getAddress()
       );
       const receipt = await tx.wait();
-
-      setGenerated(true);
-      setDocumentResult({
-        status: "verified",
-        documentId: contentHash,
-        signature,
-        issuer: address,
-        timestamp: documentData.timestamp,
-        blockNumber: receipt.blockNumber.toString(),
+      
+      setResult({
+        ipfsHash: finalIpfsResult.IpfsHash,
+        documentId: ethers.utils.keccak256(ethers.utils.toUtf8Bytes(finalIpfsResult.IpfsHash)),
         transactionHash: receipt.transactionHash
       });
+
+      // Clear form
+      setFormData({
+        title: '',
+        template: '',
+        description: '',
+        parties: '',
+        content: '',
+        ipfsHash: ''
+      });
       
-      toast.success('Document successfully generated and verified on blockchain');
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("An error occurred: " + error.message);
+      toast.success('Document generated and stored on blockchain successfully');
+    } catch (err) {
+      console.error('Error generating document:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to generate document';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
-      setGenerating(false);
+      setLoading(false);
     }
-  };
-
-  const handleDownloadDocument = async () => {
-    if (!documentResult || !pdfBlob) {
-      toast.error("No document to download");
-      return;
-    }
-
-    const url = URL.createObjectURL(pdfBlob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${formData.title.replace(/\s+/g, '_')}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
-      
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Generate Document</CardTitle>
-                <CardDescription>
-                  Create and verify documents using blockchain technology
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={(e) => e.preventDefault()}>
-                  <div className="space-y-4">
-                    <Select
-                      value={template}
-                      onValueChange={setTemplate}
-                      required
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a template" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="nda">Non-Disclosure Agreement</SelectItem>
-                        <SelectItem value="contract">Service Contract</SelectItem>
-                        <SelectItem value="custom">Custom Document</SelectItem>
-                      </SelectContent>
-                    </Select>
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold">Generate Document</CardTitle>
+            <CardDescription className="text-lg">
+              Create a document that will be stored on IPFS and verified on blockchain
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Document Type</label>
+                  <Select
+                    value={formData.template}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, template: value }))}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select document type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="contract">Contract</SelectItem>
+                      <SelectItem value="agreement">Agreement</SelectItem>
+                      <SelectItem value="certificate">Certificate</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                    <div className="space-y-4">
-                      <Input
-                        type="text"
-                        name="title"
-                        value={formData.title}
-                        onChange={handleInputChange}
-                        placeholder="Document Title"
-                        required
-                      />
-                      <Input
-                        type="text"
-                        name="description"
-                        value={formData.description}
-                        onChange={handleInputChange}
-                        placeholder="Brief description"
-                      />
-                      <Input
-                        type="text"
-                        name="parties"
-                        value={formData.parties}
-                        onChange={handleInputChange}
-                        placeholder="Parties involved"
-                      />
-                      <Textarea
-                        name="content"
-                        value={formData.content}
-                        onChange={handleInputChange}
-                        placeholder="Document content"
-                        className="min-h-[200px]"
-                      />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Document Title</label>
+                  <Input
+                    placeholder="Enter document title"
+                    value={formData.title}
+                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <Input
+                  placeholder="Enter document description"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Parties Involved</label>
+                <Input
+                  placeholder="Enter parties involved (comma separated)"
+                  value={formData.parties}
+                  onChange={(e) => setFormData(prev => ({ ...prev, parties: e.target.value }))}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Document Content</label>
+                <Textarea
+                  placeholder="Enter document content"
+                  value={formData.content}
+                  onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+                  className="min-h-[200px]"
+                />
+              </div>
+
+              <Button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {loading ? "Processing..." : "Generate Document"}
+              </Button>
+
+              {result && (
+                <div className="mt-6 p-6 bg-gray-50 rounded-lg space-y-4 border border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900">Document Generated Successfully!</h3>
+                    <span className="px-3 py-1 text-sm font-medium text-green-800 bg-green-100 rounded-full">
+                      Verified
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="p-4 bg-white rounded-lg border border-gray-200">
+                      <p className="text-sm font-medium text-gray-500 mb-2">Document ID</p>
+                      <p className="font-mono text-sm break-all bg-gray-50 p-2 rounded border border-gray-100">
+                        {result.documentId}
+                      </p>
                     </div>
 
-                    <Button
-                      type="button"
-                      onClick={handleGenerateDocument}
-                      disabled={generating}
-                      className="w-full"
-                    >
-                      {generating ? "Generating..." : "Generate Document"}
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-4 bg-white rounded-lg border border-gray-200">
+                        <p className="text-sm font-medium text-gray-500 mb-2">View Document</p>
+                        <a
+                          href={`https://gateway.pinata.cloud/ipfs/${result.ipfsHash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm break-all"
+                        >
+                          View on IPFS
+                        </a>
+                      </div>
 
-            {generated && documentResult && (
-              <ValidationBlock
-                onDownload={handleDownloadDocument}
-                onView={() => {
-                  window.open(`https://megaexplorer.xyz/tx/${documentResult.transactionHash}`);
-                }}
-                status={documentResult.status}
-                documentId={documentResult.documentId}
-                signature={documentResult.signature}
-                issuer={documentResult.issuer}
-                timestamp={documentResult.timestamp}
-                blockNumber={documentResult.blockNumber}
-                transactionHash={documentResult.transactionHash}
-              >
-                <div className="mt-4">
-                  <h3>Document Preview</h3>
-                  <div className="pdf-viewer border rounded p-4 mt-2">
-                    <Document file={pdfBlob}>
-                      <Page pageNumber={1} />
-                    </Document>
+                      <div className="p-4 bg-white rounded-lg border border-gray-200">
+                        <p className="text-sm font-medium text-gray-500 mb-2">Transaction</p>
+                        <a
+                          href={`https://megaexplorer.xyz/tx/${result.transactionHash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm break-all"
+                        >
+                          View on Explorer
+                        </a>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </ValidationBlock>
-            )}
-          </div>
-        </div>
-      </main>
-
-      <Footer />
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

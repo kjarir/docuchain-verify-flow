@@ -188,15 +188,16 @@ export const MEGAETH_EXPLORER_URL = 'https://explorer.megaeth.io';
 
 // Network configuration object for MetaMask
 export const MEGAETH_NETWORK_CONFIG = {
-  chainId: MEGAETH_TESTNET_ID,
-  chainName: "MegaETH Testnet",
+  chainId: "0x1a",  // 26 in decimal
+  chainName: "MegaETH",
   nativeCurrency: {
-    name: "MegaETH",
+    name: "ETH",
     symbol: "ETH",
-    decimals: 18
+    decimals: 18,
   },
-  rpcUrls: [MEGAETH_RPC_URL],
-  blockExplorerUrls: [MEGAETH_EXPLORER_URL]
+  rpcUrls: ["https://rpc.megaeth.io"],
+  blockExplorerUrls: ["https://megaexplorer.xyz"],
+  contractAddress: "0x8990c5daaa40673ef8826990a6fd8284a0a17d61"
 };
 
 import { ethers } from "ethers";

@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -137,11 +136,19 @@ const DashboardPage = () => {
                   timestamp="2025-04-02T14:32:11.000Z"
                   blockNumber="15482931"
                   transactionHash="0x9a7c7b0e902f9e2e68f799778b568c383ad5cef1bbc6e5678c9d9bc6eb0a3521"
+                  signature="0x..."
+                  issuer="0x1234..."
+                  onDownload={() => {}}
+                  onView={() => {}}
                 />
                 <ValidationBlock
                   status="pending"
                   documentId="0x8b7c7d5e902f9e2e68f799778b568c383ad5cef1"
                   timestamp="2025-04-03T10:15:22.000Z"
+                  signature="0x..."
+                  issuer="0x1234..."
+                  onDownload={() => {}}
+                  onView={() => {}}
                 />
               </div>
             </TabsContent>
