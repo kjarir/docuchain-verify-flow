@@ -1,25 +1,32 @@
 import { Check, Clock, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type ValidationStatus = "verified" | "pending" | "failed";
 
 interface ValidationBlockProps {
   status: ValidationStatus;
   documentId: string;
+  signature?: string;
+  issuer?: string;
   timestamp: string;
   blockNumber?: string;
   transactionHash?: string;
   onDownload: () => void;
   onView: () => void;
+  children?: React.ReactNode;
 }
 
 const ValidationBlock = ({
   status,
   documentId,
+  signature,
+  issuer,
   timestamp,
   blockNumber,
   transactionHash,
   onDownload,
-  onView
+  onView,
+  children
 }: ValidationBlockProps) => {
   const getStatusContent = () => {
     switch (status) {
@@ -91,10 +98,12 @@ const ValidationBlock = ({
         )}
       </div>
 
-      {/* <div className="flex gap-2 mt-4">
+      <div className="flex gap-2 mt-4">
         <Button onClick={onDownload} variant="outline">Download</Button>
         <Button onClick={onView} variant="outline">View on Blockchain</Button>
-      </div> */}
+      </div>
+      
+      {children}
     </div>
   );
 };
