@@ -30,7 +30,7 @@ const Navbar = () => {
           <div className="w-10 h-10 rounded-lg bg-gradient-blockchain flex items-center justify-center">
             <Shield className="text-white" size={20} />
           </div>
-          <span className="font-bold text-xl">DocuChain</span>
+          <span className="font-bold text-xl">TrustIssues</span>
         </Link>
         
         <div className="hidden md:flex items-center gap-6">

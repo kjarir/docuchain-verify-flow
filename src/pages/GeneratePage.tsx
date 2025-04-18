@@ -265,7 +265,7 @@ const GeneratePage = () => {
               <Button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                className="w-full bg-gradient-blockchain text-white"
               >
                 {loading ? "Processing..." : "Generate Document"}
               </Button>

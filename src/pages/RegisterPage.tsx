@@ -64,7 +64,7 @@ const RegisterPage = () => {
             </div>
             <CardTitle className="text-2xl">Create an Account</CardTitle>
             <CardDescription>
-              Enter your details to create a DocuChain account
+              Enter your details to create a TrustIssues account
             </CardDescription>
           </CardHeader>
           <CardContent>

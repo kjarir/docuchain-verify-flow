@@ -10,7 +10,7 @@ import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 
 const DashboardPage = () => {
-  const [apiKey, setApiKey] = useState("sk_test_docuchain_7f8a9b5c3d2e1f0g");
+  const [apiKey, setApiKey] = useState("sk_test_TrustIssues_7f8a9b5c3d2e1f0g");
   const { toast } = useToast();
   
   const handleCopyApiKey = () => {
@@ -24,7 +24,7 @@ const DashboardPage = () => {
   
   const handleRegenerateApiKey = () => {
     // In a real app, this would call an API to regenerate the key
-    const newKey = "sk_test_docuchain_" + Math.random().toString(36).substring(2, 15);
+    const newKey = "sk_test_TrustIssues_" + Math.random().toString(36).substring(2, 15);
     setApiKey(newKey);
     toast({
       title: "API Key regenerated",
@@ -216,7 +216,7 @@ const DashboardPage = () => {
                         </Button>
                       </div>
                       <p className="text-xs text-gray-500">
-                        Use this key to authenticate requests to the DocuChain API.
+                        Use this key to authenticate requests to the TrustIssues API.
                       </p>
                     </div>
                     

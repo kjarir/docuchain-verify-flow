@@ -12,7 +12,7 @@ const Footer = () => {
               <div className="w-8 h-8 rounded-lg bg-gradient-blockchain flex items-center justify-center">
                 <Shield className="text-white" size={16} />
               </div>
-              <span className="font-bold text-lg">DocuChain</span>
+              <span className="font-bold text-lg">TrustIssues</span>
             </Link>
             <p className="text-sm text-gray-600">
               Blockchain-based document validation and generation for enterprise security and transparency.
@@ -110,7 +110,7 @@ const Footer = () => {
         </div>
         
         <div className="border-t border-gray-200 mt-10 pt-6 text-sm text-gray-500 text-center">
-          © {new Date().getFullYear()} DocuChain. All rights reserved.
+          © {new Date().getFullYear()} TrustIssues. All rights reserved.
         </div>
       </div>
     </footer>

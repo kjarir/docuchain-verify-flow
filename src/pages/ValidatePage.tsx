@@ -231,7 +231,7 @@ const ValidatePage = () => {
                   <Button
                     onClick={verifyWithId}
                     disabled={!documentId || loading}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                    className="w-full bg-gradient-blockchain text-white"
                   >
                     {loading ? "Verifying..." : "Verify Document"}
                   </Button>

@@ -134,9 +134,9 @@ const Index = () => {
               <div>
                 <div className="bg-white rounded-xl p-6 shadow-lg border">
                   <div className="font-mono text-sm text-gray-800">
-                    <div className="text-gray-400">// Initialize DocuChain client</div>
+                    <div className="text-gray-400">// Initialize TrustIssues client</div>
                     <div className="mt-2">
-                      <span className="text-blue-600">const</span> docuchain = <span className="text-blue-600">new</span> DocuChain({'{'} 
+                      <span className="text-blue-600">const</span> TrustIssues = <span className="text-blue-600">new</span> TrustIssues({'{'} 
                       <br />
                       <span className="pl-4">apiKey: </span><span className="text-green-600">'YOUR_API_KEY'</span>
                       <br />
@@ -144,7 +144,7 @@ const Index = () => {
                     </div>
                     <div className="mt-4 text-gray-400">// Generate a new document</div>
                     <div className="mt-2">
-                      <span className="text-blue-600">const</span> document = <span className="text-blue-600">await</span> docuchain.generate({'{'} 
+                      <span className="text-blue-600">const</span> document = <span className="text-blue-600">await</span> TrustIssues.generate({'{'} 
                       <br />
                       <span className="pl-4">template: </span><span className="text-green-600">'contract'</span>,
                       <br />
@@ -154,7 +154,7 @@ const Index = () => {
                     </div>
                     <div className="mt-4 text-gray-400">// Validate a document</div>
                     <div className="mt-2">
-                      <span className="text-blue-600">const</span> result = <span className="text-blue-600">await</span> docuchain.validate({'{'} 
+                      <span className="text-blue-600">const</span> result = <span className="text-blue-600">await</span> TrustIssues.validate({'{'} 
                       <br />
                       <span className="pl-4">documentId: </span><span className="text-green-600">'0xf7c6...'</span>
                       <br />
@@ -166,7 +166,7 @@ const Index = () => {
               <div className="space-y-6">
                 <h2 className="text-3xl font-bold">Easy Integration for Companies</h2>
                 <p className="text-gray-600">
-                  Integrate DocuChain into your existing systems with our simple API. Generate and validate documents with just a few lines of code.
+                  Integrate TrustIssues into your existing systems with our simple API. Generate and validate documents with just a few lines of code.
                 </p>
                 <ul className="space-y-3">
                   <li className="flex items-start gap-2">
@@ -179,7 +179,7 @@ const Index = () => {
                     <div className="mt-1 text-green-500 flex-shrink-0">
                       <Check size={16} />
                     </div>
-                    <span className="text-gray-700">Use our SDK to connect to the DocuChain service</span>
+                    <span className="text-gray-700">Use our SDK to connect to the TrustIssues service</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <div className="mt-1 text-green-500 flex-shrink-0">

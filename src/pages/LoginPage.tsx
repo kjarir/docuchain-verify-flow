@@ -54,7 +54,7 @@ const LoginPage = () => {
                 <Shield className="text-white" size={32} />
               </div>
             </div>
-            <CardTitle className="text-2xl">Log in to DocuChain</CardTitle>
+            <CardTitle className="text-2xl">Log in to TrustIssues</CardTitle>
             <CardDescription>
               Enter your credentials to access your account
             </CardDescription>
