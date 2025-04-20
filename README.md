@@ -1,8 +1,8 @@
 # 🛡️ TrustIssues
 
-**Blockchain-Powered Certificate Verification System**
+**Blockchain-Powered document Verification System**
 
-**TrustIssues** is a decentralized platform that securely creates and verifies certificates by converting user data into **Keccak-256 hashes** and storing them on the Ethereum blockchain. This ensures that certificates are tamper-proof, verifiable globally, and owned transparently.
+**TrustIssues** is a decentralized platform that securely creates and verifies documents by converting user data into **Keccak-256 hashes** and storing them on the MegaETH testnet. This ensures that documents are tamper-proof, verifiable globally, and owned transparently.
 
 🌐 **Live Demo:** [https://trustissues.vercel.app](https://trustissues.vercel.app)
 
@@ -10,7 +10,7 @@
 
 ## 🚀 Features
 
-- 🔒 Secure certificate generation using **Keccak-256 hashing**
+- 🔒 Secure document generation using **Keccak-256 hashing**
 - ⛓️ Immutable storage on the Ethereum blockchain
 - 🧾 Easy verification via a clean and simple UI
 - 🌍 Accessible from anywhere—fully decentralized
@@ -19,8 +19,8 @@
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** Next.js, TypeScript, Tailwind CSS
-- **Smart Contract:** Solidity, Ethereum (via Remix IDE)
+- **Frontend:** React.JS, TypeScript, Tailwind CSS
+- **Smart Contract:** Solidity, Ethereu (via Remix IDE)
 - **Hashing:** Keccak-256 (default in Solidity)
 - **Deployment:** Vercel
 
@@ -37,7 +37,7 @@
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/trustissues.git
+git clone https://github.com/kjarir/trustissues.git
 cd trustissues
 Install Dependencies
 bash
@@ -54,28 +54,28 @@ npm run dev
 # or
 yarn dev
 🧠 How It Works
-User fills form → certificate data is collected.
+User fills form → document data is collected.
 
 Data is hashed using keccak256 algorithm.
 
 Hash is stored on-chain via a Solidity smart contract.
 
-Anyone can verify the certificate by inputting the hash on the frontend.
+Anyone can verify the document by inputting the hash on the frontend.
 
 Example Solidity Function
 solidity
 Copy
 Edit
-function storeCertificateHash(bytes32 hash) public {
+function storedocumentHash(bytes32 hash) public {
     require(hash != 0, "Hash cannot be zero");
-    certificates[msg.sender].push(hash);
+    documents[msg.sender].push(hash);
 }
-✅ Verify a Certificate
+✅ Verify a document
 Go to https://trustissues.vercel.app
 
 Navigate to the "Verify" section
 
-Paste the hash value of a certificate
+Paste the hash value of a document
 
 The system will confirm if it's on the blockchain
 
